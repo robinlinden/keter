@@ -1,5 +1,6 @@
 #include <SDL.h>
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -54,10 +55,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-    SDL_RenderClear(renderer);
-    SDL_RenderPresent(renderer);
-
     SDL_Texture *const texture = SDL_CreateTexture(
             renderer,
             SDL_PIXELFORMAT_ARGB8888,
@@ -69,8 +66,6 @@ int main(int argc, char *argv[]) {
         SDL_DestroyWindow(window);
         return 1;
     }
-
-    SDL_Delay(1000);
 
     uint32_t *const pixels = calloc(1, WINDOW_WIDTH * WINDOW_HEIGHT * sizeof(uint32_t));
     if (pixels == NULL) {
@@ -105,7 +100,18 @@ int main(int argc, char *argv[]) {
     SDL_RenderCopy(renderer, texture, NULL, NULL);
     SDL_RenderPresent(renderer);
 
-    SDL_Delay(2000);
+    bool running = true;
+    while (running) {
+        SDL_Event ev;
+        while (SDL_PollEvent(&ev)) {
+            switch (ev.type) {
+            case SDL_QUIT:
+                running = false;
+                break;
+            }
+        }
+    }
+
     free(pixels);
     SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
