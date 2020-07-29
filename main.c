@@ -1,11 +1,32 @@
 #include <SDL.h>
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
 #define WINDOW_WIDTH 640
 #define WINDOW_HEIGHT 480
+
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+
+static void vertical_line(
+        uint32_t *const surface,
+        uint32_t x,
+        uint32_t y1, uint32_t y2,
+        uint32_t color) {
+    // Border.
+    surface[y1 * WINDOW_WIDTH + x] = 0;
+    surface[y2 * WINDOW_WIDTH + x] = 0;
+
+    // Fill.
+    const uint32_t y_min = MIN(y1, y2);
+    const uint32_t y_max = MAX(y1, y2);
+    for (uint32_t y = y_min + 1; y < y_max; ++y) {
+        surface[y * WINDOW_WIDTH + x] = color;
+    }
+}
 
 int main(int argc, char *argv[]) {
     srand(time(NULL));
@@ -69,6 +90,15 @@ int main(int argc, char *argv[]) {
             pixels[i * WINDOW_WIDTH + j] = pixel;
         }
     }
+
+    vertical_line(pixels, 60, WINDOW_HEIGHT / 3, WINDOW_HEIGHT / 3 * 2, 0xFFFF0000);
+    vertical_line(pixels, 61, WINDOW_HEIGHT / 3, WINDOW_HEIGHT / 3 * 2, 0xFFFF0000);
+    vertical_line(pixels, 62, WINDOW_HEIGHT / 3, WINDOW_HEIGHT / 3 * 2, 0xFF00FF00);
+    vertical_line(pixels, 63, WINDOW_HEIGHT / 3, WINDOW_HEIGHT / 3 * 2, 0xFF00FF00);
+    vertical_line(pixels, 64, WINDOW_HEIGHT / 3, WINDOW_HEIGHT / 3 * 2, 0xFF0000FF);
+    vertical_line(pixels, 65, WINDOW_HEIGHT / 3, WINDOW_HEIGHT / 3 * 2, 0xFF0000FF);
+    vertical_line(pixels, 66, WINDOW_HEIGHT / 3, WINDOW_HEIGHT / 3 * 2, 0xFF000000);
+    vertical_line(pixels, 67, WINDOW_HEIGHT / 3, WINDOW_HEIGHT / 3 * 2, 0xFF000000);
 
     SDL_UpdateTexture(texture, NULL, pixels, WINDOW_WIDTH * sizeof(uint32_t));
     SDL_RenderClear(renderer);
