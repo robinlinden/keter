@@ -20,7 +20,19 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    SDL_Delay(1000);
+    SDL_Renderer *const renderer = SDL_CreateRenderer(window, -1, 0);
+    if (renderer == NULL) {
+        fprintf(stderr, "Failed to create SDL renderer.\n");
+        SDL_DestroyWindow(window);
+        return 1;
+    }
+
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+    SDL_RenderClear(renderer);
+    SDL_RenderPresent(renderer);
+
+    SDL_Delay(2000);
+    SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     return 0;
 }
