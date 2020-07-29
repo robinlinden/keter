@@ -1,9 +1,11 @@
 #include <SDL.h>
 
+#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #define WINDOW_WIDTH 640
@@ -11,6 +13,11 @@
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
+
+typedef struct Player {
+    float x, y;
+    float heading;
+} Player;
 
 static void vertical_line(
         uint32_t *const surface,
@@ -27,6 +34,20 @@ static void vertical_line(
     for (uint32_t y = y_min + 1; y < y_max; ++y) {
         surface[y * WINDOW_WIDTH + x] = color;
     }
+}
+
+static void draw_player(
+        uint32_t *const surface,
+        const Player *const p) {
+    for (uint32_t y = p->y - 5; y < p->y + 5; ++y) {
+        for (uint32_t x = p->x - 5; x < p->x + 5; ++x) {
+            surface[y * WINDOW_WIDTH + x] = 0x00FF0000;
+        }
+    }
+
+    const uint32_t heading_y = p->y + sinf(p->heading) * 15;
+    const uint32_t heading_x = p->x + cosf(p->heading) * 15;
+    surface[heading_y * WINDOW_WIDTH + heading_x] = 0x00FF00FF;
 }
 
 int main(int argc, char *argv[]) {
@@ -76,40 +97,65 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    for (uint32_t i = 30; i < WINDOW_HEIGHT - 30; ++i) {
-        for (uint32_t j = 30; j < WINDOW_WIDTH - 30; ++j) {
-            uint32_t pixel = rand() % 255;
-            pixel += rand() % 255 << 8;
-            pixel += rand() % 255 << 16;
-            pixel += rand() % 255 << 24;
-            pixels[i * WINDOW_WIDTH + j] = pixel;
-        }
-    }
-
-    vertical_line(pixels, 60, WINDOW_HEIGHT / 3, WINDOW_HEIGHT / 3 * 2, 0xFFFF0000);
-    vertical_line(pixels, 61, WINDOW_HEIGHT / 3, WINDOW_HEIGHT / 3 * 2, 0xFFFF0000);
-    vertical_line(pixels, 62, WINDOW_HEIGHT / 3, WINDOW_HEIGHT / 3 * 2, 0xFF00FF00);
-    vertical_line(pixels, 63, WINDOW_HEIGHT / 3, WINDOW_HEIGHT / 3 * 2, 0xFF00FF00);
-    vertical_line(pixels, 64, WINDOW_HEIGHT / 3, WINDOW_HEIGHT / 3 * 2, 0xFF0000FF);
-    vertical_line(pixels, 65, WINDOW_HEIGHT / 3, WINDOW_HEIGHT / 3 * 2, 0xFF0000FF);
-    vertical_line(pixels, 66, WINDOW_HEIGHT / 3, WINDOW_HEIGHT / 3 * 2, 0xFF000000);
-    vertical_line(pixels, 67, WINDOW_HEIGHT / 3, WINDOW_HEIGHT / 3 * 2, 0xFF000000);
-
     SDL_UpdateTexture(texture, NULL, pixels, WINDOW_WIDTH * sizeof(uint32_t));
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, texture, NULL, NULL);
     SDL_RenderPresent(renderer);
 
+    bool wasd[4] = {0}; // Held keys.
+    Player p = { .x = 100, .y = 100 };
+
     bool running = true;
     while (running) {
+        memset(pixels, 0, WINDOW_WIDTH * WINDOW_HEIGHT * sizeof(uint32_t));
+        draw_player(pixels, &p);
+        vertical_line(pixels, 400, 100, 400, 0x0000FFFF);
+        SDL_UpdateTexture(texture, NULL, pixels, WINDOW_WIDTH * sizeof(uint32_t));
+        SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, texture, NULL, NULL);
+        SDL_RenderPresent(renderer);
+
         SDL_Event ev;
         while (SDL_PollEvent(&ev)) {
             switch (ev.type) {
+            case SDL_KEYDOWN:
+            case SDL_KEYUP:
+                switch(ev.key.keysym.sym) {
+                    case 'w':
+                        wasd[0] = ev.type == SDL_KEYDOWN;
+                        break;
+                    case 'a':
+                        wasd[1] = ev.type == SDL_KEYDOWN;
+                        break;
+                    case 's':
+                        wasd[2] = ev.type == SDL_KEYDOWN;
+                        break;
+                    case 'd':
+                        wasd[3] = ev.type == SDL_KEYDOWN;
+                        break;
+                    default: break;
+                }
+                break;
             case SDL_QUIT:
                 running = false;
                 break;
             }
         }
+
+        p.x += wasd[0] ? cosf(p.heading) : 0;
+        p.y += wasd[0] ? sinf(p.heading) : 0;
+        p.x -= wasd[2] ? cosf(p.heading) : 0;
+        p.y -= wasd[2] ? sinf(p.heading) : 0;
+
+        p.heading -= wasd[1] ? 0.1 : 0;
+        p.heading += wasd[3] ? 0.1 : 0;
+        if (p.heading > M_PI * 2) {
+            p.heading -= M_PI * 2;
+        } else if (p.heading < 0) {
+            p.heading += M_PI * 2;
+        }
+
+        SDL_Delay(10);
     }
 
     free(pixels);
