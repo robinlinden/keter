@@ -8,8 +8,10 @@
 #include <string.h>
 #include <time.h>
 
-#define WINDOW_WIDTH 640
-#define WINDOW_HEIGHT 480
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 600
+#define VIEWPORT_WIDTH 400
+#define VIEWPORT_HEIGHT 600
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
@@ -25,14 +27,14 @@ static void vertical_line(
         uint32_t y1, uint32_t y2,
         uint32_t color) {
     // Border.
-    surface[y1 * WINDOW_WIDTH + x] = 0;
-    surface[y2 * WINDOW_WIDTH + x] = 0;
+    surface[y1 * VIEWPORT_WIDTH + x] = 0;
+    surface[y2 * VIEWPORT_WIDTH + x] = 0;
 
     // Fill.
     const uint32_t y_min = MIN(y1, y2);
     const uint32_t y_max = MAX(y1, y2);
     for (uint32_t y = y_min + 1; y < y_max; ++y) {
-        surface[y * WINDOW_WIDTH + x] = color;
+        surface[y * VIEWPORT_WIDTH + x] = color;
     }
 }
 
@@ -41,13 +43,13 @@ static void draw_player(
         const Player *const p) {
     for (uint32_t y = p->y - 5; y < p->y + 5; ++y) {
         for (uint32_t x = p->x - 5; x < p->x + 5; ++x) {
-            surface[y * WINDOW_WIDTH + x] = 0x00FF0000;
+            surface[y * VIEWPORT_WIDTH + x] = 0x00FF0000;
         }
     }
 
     const uint32_t heading_y = p->y + sinf(p->heading) * 15;
     const uint32_t heading_x = p->x + cosf(p->heading) * 15;
-    surface[heading_y * WINDOW_WIDTH + heading_x] = 0x00FF00FF;
+    surface[heading_y * VIEWPORT_WIDTH + heading_x] = 0x00FF00FF;
 }
 
 int main(int argc, char *argv[]) {
@@ -82,22 +84,47 @@ int main(int argc, char *argv[]) {
             SDL_TEXTUREACCESS_STREAMING,
             WINDOW_WIDTH, WINDOW_HEIGHT);
     if (texture == NULL) {
-        fprintf(stderr, "Failed to create SDL texture.\n");
+        fprintf(stderr, "Failed to create SDL texture 0.\n");
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         return 1;
     }
 
-    uint32_t *const pixels = calloc(1, WINDOW_WIDTH * WINDOW_HEIGHT * sizeof(uint32_t));
-    if (pixels == NULL) {
-        fprintf(stderr, "Failed to allocate for pixel data.\n");
+    uint32_t *const pixels0 = calloc(1, VIEWPORT_WIDTH * VIEWPORT_HEIGHT * sizeof(uint32_t));
+    if (pixels0 == NULL) {
+        fprintf(stderr, "Failed to allocate for pixel data 0.\n");
         SDL_DestroyTexture(texture);
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         return 1;
     }
 
-    SDL_UpdateTexture(texture, NULL, pixels, WINDOW_WIDTH * sizeof(uint32_t));
+    uint32_t *const pixels1 = calloc(1, VIEWPORT_WIDTH * VIEWPORT_HEIGHT * sizeof(uint32_t));
+    if (pixels1 == NULL) {
+        fprintf(stderr, "Failed to allocate for pixel data 1.\n");
+        free(pixels0);
+        SDL_DestroyTexture(texture);
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        return 1;
+    }
+
+    SDL_Rect viewport0 = {
+        .x = 0,
+        .y = 0,
+        .w = 400,
+        .h = 600,
+    };
+
+    SDL_Rect viewport1 = {
+        .x = 400,
+        .y = 0,
+        .w = 400,
+        .h = 600,
+    };
+
+    SDL_UpdateTexture(texture, &viewport0, pixels0, VIEWPORT_WIDTH * sizeof(uint32_t));
+    SDL_UpdateTexture(texture, &viewport1, pixels1, VIEWPORT_WIDTH * sizeof(uint32_t));
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, texture, NULL, NULL);
     SDL_RenderPresent(renderer);
@@ -107,10 +134,13 @@ int main(int argc, char *argv[]) {
 
     bool running = true;
     while (running) {
-        memset(pixels, 0, WINDOW_WIDTH * WINDOW_HEIGHT * sizeof(uint32_t));
-        draw_player(pixels, &p);
-        vertical_line(pixels, 400, 100, 400, 0x0000FFFF);
-        SDL_UpdateTexture(texture, NULL, pixels, WINDOW_WIDTH * sizeof(uint32_t));
+        memset(pixels0, 0, VIEWPORT_WIDTH * VIEWPORT_HEIGHT * sizeof(uint32_t));
+        memset(pixels1, 0xCD, VIEWPORT_WIDTH * VIEWPORT_HEIGHT * sizeof(uint32_t));
+        vertical_line(pixels1, 100, 30, VIEWPORT_HEIGHT - 30, 0x00FF00FF);
+        draw_player(pixels0, &p);
+        vertical_line(pixels0, 300, 100, 400, 0x0000FFFF);
+        SDL_UpdateTexture(texture, &viewport0, pixels0, VIEWPORT_WIDTH * sizeof(uint32_t));
+        SDL_UpdateTexture(texture, &viewport1, pixels1, VIEWPORT_WIDTH * sizeof(uint32_t));
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, texture, NULL, NULL);
         SDL_RenderPresent(renderer);
@@ -158,7 +188,8 @@ int main(int argc, char *argv[]) {
         SDL_Delay(10);
     }
 
-    free(pixels);
+    free(pixels1);
+    free(pixels0);
     SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
