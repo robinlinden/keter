@@ -26,3 +26,17 @@ target_link_libraries(${PROJECT_NAME}
         SDL2main
         SDL2-static
 )
+
+target_compile_options(${PROJECT_NAME} INTERFACE
+    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
+        -pedantic-errors;
+        -Wall;
+        -Werror;
+        -Wextra;
+    >
+    $<$<CXX_COMPILER_ID:MSVC>:
+        /permissive-;
+        /W4;
+        /WX;
+    >
+)
