@@ -123,12 +123,6 @@ int main(int argc, char *argv[]) {
         .h = 600,
     };
 
-    SDL_UpdateTexture(texture, &viewport0, pixels0, VIEWPORT_WIDTH * sizeof(uint32_t));
-    SDL_UpdateTexture(texture, &viewport1, pixels1, VIEWPORT_WIDTH * sizeof(uint32_t));
-    SDL_RenderClear(renderer);
-    SDL_RenderCopy(renderer, texture, NULL, NULL);
-    SDL_RenderPresent(renderer);
-
     bool wasd[4] = {0}; // Held keys.
     Player p = { .x = 100, .y = 100 };
 
