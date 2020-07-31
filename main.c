@@ -11,7 +11,7 @@
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 #define VIEWPORT_WIDTH 400
-#define VIEWPORT_HEIGHT 600
+#define VIEWPORT_HEIGHT 300
 #define VIEWPORT_BYTES VIEWPORT_WIDTH * VIEWPORT_HEIGHT * sizeof(uint32_t)
 #define VIEWPORT_STRIDE VIEWPORT_WIDTH * sizeof(uint32_t)
 
@@ -121,6 +121,49 @@ static void draw_player(
     draw_pixel(surface, heading_x, heading_y, 0x00FF00FF);
 }
 
+static void draw_wall(
+        uint32_t *const surface,
+        const Player *const p,
+        float x0, float y0,
+        float x1, float y1,
+        int32_t color) {
+    make_relative(p, &x0, &y0);
+    make_relative(p, &x1, &y1);
+
+    const float z0 = -y0;
+    const float z1 = -y1;
+
+    // Is the object fully behind the player?
+    if (z0 <= 0 && z1 <= 0) {
+        return;
+    }
+
+    // Is the object partially behind the player?
+    if (z0 <= 0 || z1 <= 0) {
+        return;
+    }
+
+    x0 = -x0 * 128 / y0;
+    float y0a = -2000 / y0;
+    float y0b = 2000 / y0;
+
+    x1 = -x1 * 128 / y1;
+    float y1a = -2000 / y1;
+    float y1b = 2000 / y1;
+
+    x0 += VIEWPORT_WIDTH / 2;
+    x1 += VIEWPORT_WIDTH / 2;
+    y0a += VIEWPORT_HEIGHT / 2;
+    y0b += VIEWPORT_HEIGHT / 2;
+    y1a += VIEWPORT_HEIGHT / 2;
+    y1b += VIEWPORT_HEIGHT / 2;
+
+    draw_line(surface, x0, y0a, x1, y1a, color); // top
+    draw_line(surface, x0, y0b, x1, y1b, color); // bottom
+    draw_line(surface, x0, y0a, x0, y0b, color); // left
+    draw_line(surface, x1, y1a, x1, y1b, color); // right
+}
+
 int main(int argc, char *argv[]) {
     srand(time(NULL));
 
@@ -178,6 +221,17 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    uint32_t *const first_person_surface = calloc(1, VIEWPORT_BYTES);
+    if (first_person_surface == NULL) {
+        fprintf(stderr, "Failed to allocate for pixel data 2.\n");
+        free(relative_surface);
+        free(absolute_surface);
+        SDL_DestroyTexture(texture);
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        return 1;
+    }
+
     const SDL_Rect absolute_viewport = {
         .x = 0,
         .y = 0,
@@ -188,6 +242,13 @@ int main(int argc, char *argv[]) {
     const SDL_Rect relative_viewport = {
         .x = VIEWPORT_WIDTH,
         .y = 0,
+        .w = VIEWPORT_WIDTH,
+        .h = VIEWPORT_HEIGHT,
+    };
+
+    const SDL_Rect first_person_viewport = {
+        .x = 0,
+        .y = VIEWPORT_HEIGHT,
         .w = VIEWPORT_WIDTH,
         .h = VIEWPORT_HEIGHT,
     };
@@ -228,6 +289,13 @@ int main(int argc, char *argv[]) {
         draw_relative_line(relative_surface, &p, 100, 50, 50, 50, 0x0000FFFF);
 
         SDL_UpdateTexture(texture, &relative_viewport, relative_surface, VIEWPORT_STRIDE);
+
+        // First-person view
+        memset(first_person_surface, 0x44, VIEWPORT_BYTES);
+
+        draw_wall(first_person_surface, &p, 250, 400, 250, 100, 0x0000FFFF);
+
+        SDL_UpdateTexture(texture, &first_person_viewport, first_person_surface, VIEWPORT_STRIDE);
 
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, texture, NULL, NULL);
@@ -279,6 +347,7 @@ int main(int argc, char *argv[]) {
         SDL_Delay(10);
     }
 
+    free(first_person_surface);
     free(relative_surface);
     free(absolute_surface);
     SDL_DestroyTexture(texture);
