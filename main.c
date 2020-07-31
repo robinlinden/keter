@@ -35,19 +35,15 @@ static void draw_line(
     x1 = CLAMP(x1, 0, VIEWPORT_WIDTH - 1);
     y0 = CLAMP(y0, 0, VIEWPORT_HEIGHT - 1);
     y1 = CLAMP(y1, 0, VIEWPORT_HEIGHT - 1);
-    const int32_t x_min = MIN(x0, x1);
-    const int32_t x_max = MAX(x0, x1);
-    const int32_t y_min = MIN(y0, y1);
-    const int32_t y_max = MAX(y0, y1);
 
-    float dx = x_max - x_min;
-    float dy = y_max - y_min;
-    const float step = MAX(dx, dy);
+    float dx = x1 - x0;
+    float dy = y1 - y0;
+    const float step = MAX(fabs(dx), fabs(dy));
     dx /= step;
     dy /= step;
 
-    float x = x_min;
-    float y = y_min;
+    float x = x0;
+    float y = y0;
 
     // Fill.
     for (uint32_t i = 0; i < step; ++i, x += dx, y += dy) {
@@ -57,6 +53,43 @@ static void draw_line(
     // Border.
     draw_pixel(surface, x0, y0, 0);
     draw_pixel(surface, x1, y1, 0);
+}
+
+static inline void make_relative(const Player *const p, float *const x, float *const y) {
+    const float angle = -M_PI / 2 - p->heading;
+    const float xt = (*x - p->x) * cosf(angle) - (*y - p->y) * sinf(angle);
+    const float yt = (*x - p->x) * sinf(angle) + (*y - p->y) * cosf(angle);
+    *x = xt;
+    *y = yt;
+}
+
+static void draw_relative_line(
+        uint32_t *const surface,
+        const Player *const p,
+        float x0, float y0,
+        float x1, float y1,
+        int32_t color) {
+    make_relative(p, &x0, &y0);
+    make_relative(p, &x1, &y1);
+    draw_line(
+            surface,
+            x0 + VIEWPORT_WIDTH / 2, y0 + VIEWPORT_HEIGHT / 2,
+            x1 + VIEWPORT_WIDTH / 2, y1 + VIEWPORT_HEIGHT / 2,
+            color);
+}
+
+static void draw_relative_player(
+        uint32_t *const surface,
+        const Player *const p) {
+    for (uint32_t y = VIEWPORT_HEIGHT / 2 - 5; y < VIEWPORT_HEIGHT / 2 + 5; ++y) {
+        for (uint32_t x = VIEWPORT_WIDTH / 2 - 5; x < VIEWPORT_WIDTH / 2 + 5; ++x) {
+            draw_pixel(surface, x, y, 0x00FF0000);
+        }
+    }
+
+    const uint32_t heading_x = VIEWPORT_WIDTH / 2;
+    const uint32_t heading_y = VIEWPORT_HEIGHT / 2 - 10;
+    draw_pixel(surface, heading_x, heading_y, 0x00FF00FF);
 }
 
 static void draw_vertical_line(
@@ -166,15 +199,38 @@ int main(int argc, char *argv[]) {
 
     bool running = true;
     while (running) {
+        // Absolute view
         memset(pixels0, 0, VIEWPORT_WIDTH * VIEWPORT_HEIGHT * sizeof(uint32_t));
         draw_player(pixels0, &p);
-        draw_vertical_line(pixels0, 300, 100, 400, 0x0000FFFF);
+
+        draw_line(pixels0, 300, 100, 300, 400, 0x0000FFFF);
+        draw_line(pixels0, 300, 400, 250, 400, 0x0000FFFF);
+        draw_line(pixels0, 250, 400, 250, 100, 0x0000FFFF);
+        draw_line(pixels0, 250, 100, 300, 100, 0x0000FFFF);
+
+        draw_line(pixels0, 50, 50, 50, 100, 0x0000FFFF);
+        draw_line(pixels0, 50, 100, 100, 100, 0x0000FFFF);
+        draw_line(pixels0, 100, 100, 100, 50, 0x0000FFFF);
+        draw_line(pixels0, 100, 50, 50, 50, 0x0000FFFF);
+
         SDL_UpdateTexture(texture, &viewport0, pixels0, VIEWPORT_WIDTH * sizeof(uint32_t));
 
-        memset(pixels1, 0xCD, VIEWPORT_WIDTH * VIEWPORT_HEIGHT * sizeof(uint32_t));
-        draw_vertical_line(pixels1, 100, 30, VIEWPORT_HEIGHT - 30, 0x00FF00FF);
-        draw_line(pixels1, 10, 10, 100, 200, 0x00FF00FF);
+        // Relative view
+        memset(pixels1, 0x22, VIEWPORT_WIDTH * VIEWPORT_HEIGHT * sizeof(uint32_t));
+        draw_relative_player(pixels1, &p);
+
+        draw_relative_line(pixels1, &p, 300, 100, 300, 400, 0x0000FFFF);
+        draw_relative_line(pixels1, &p, 300, 400, 250, 400, 0x0000FFFF);
+        draw_relative_line(pixels1, &p, 250, 400, 250, 100, 0x0000FFFF);
+        draw_relative_line(pixels1, &p, 250, 100, 300, 100, 0x0000FFFF);
+
+        draw_relative_line(pixels1, &p, 50, 50, 50, 100, 0x0000FFFF);
+        draw_relative_line(pixels1, &p, 50, 100, 100, 100, 0x0000FFFF);
+        draw_relative_line(pixels1, &p, 100, 100, 100, 50, 0x0000FFFF);
+        draw_relative_line(pixels1, &p, 100, 50, 50, 50, 0x0000FFFF);
+
         SDL_UpdateTexture(texture, &viewport1, pixels1, VIEWPORT_WIDTH * sizeof(uint32_t));
+
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, texture, NULL, NULL);
         SDL_RenderPresent(renderer);
