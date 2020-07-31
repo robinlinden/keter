@@ -12,6 +12,8 @@
 #define WINDOW_HEIGHT 600
 #define VIEWPORT_WIDTH 400
 #define VIEWPORT_HEIGHT 600
+#define VIEWPORT_BYTES VIEWPORT_WIDTH * VIEWPORT_HEIGHT * sizeof(uint32_t)
+#define VIEWPORT_STRIDE VIEWPORT_WIDTH * sizeof(uint32_t)
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
@@ -161,8 +163,8 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    uint32_t *const pixels0 = calloc(1, VIEWPORT_WIDTH * VIEWPORT_HEIGHT * sizeof(uint32_t));
-    if (pixels0 == NULL) {
+    uint32_t *const absolute_surface = calloc(1, VIEWPORT_BYTES);
+    if (absolute_surface == NULL) {
         fprintf(stderr, "Failed to allocate for pixel data 0.\n");
         SDL_DestroyTexture(texture);
         SDL_DestroyRenderer(renderer);
@@ -170,28 +172,28 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    uint32_t *const pixels1 = calloc(1, VIEWPORT_WIDTH * VIEWPORT_HEIGHT * sizeof(uint32_t));
-    if (pixels1 == NULL) {
+    uint32_t *const relative_surface = calloc(1, VIEWPORT_BYTES);
+    if (relative_surface == NULL) {
         fprintf(stderr, "Failed to allocate for pixel data 1.\n");
-        free(pixels0);
+        free(absolute_surface);
         SDL_DestroyTexture(texture);
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         return 1;
     }
 
-    SDL_Rect viewport0 = {
+    const SDL_Rect absolute_viewport = {
         .x = 0,
         .y = 0,
-        .w = 400,
-        .h = 600,
+        .w = VIEWPORT_WIDTH,
+        .h = VIEWPORT_HEIGHT,
     };
 
-    SDL_Rect viewport1 = {
-        .x = 400,
+    const SDL_Rect relative_viewport = {
+        .x = VIEWPORT_WIDTH,
         .y = 0,
-        .w = 400,
-        .h = 600,
+        .w = VIEWPORT_WIDTH,
+        .h = VIEWPORT_HEIGHT,
     };
 
     bool wasd[4] = {0}; // Held keys.
@@ -200,36 +202,36 @@ int main(int argc, char *argv[]) {
     bool running = true;
     while (running) {
         // Absolute view
-        memset(pixels0, 0, VIEWPORT_WIDTH * VIEWPORT_HEIGHT * sizeof(uint32_t));
-        draw_player(pixels0, &p);
+        memset(absolute_surface, 0, VIEWPORT_BYTES);
+        draw_player(absolute_surface, &p);
 
-        draw_line(pixels0, 300, 100, 300, 400, 0x0000FFFF);
-        draw_line(pixels0, 300, 400, 250, 400, 0x0000FFFF);
-        draw_line(pixels0, 250, 400, 250, 100, 0x0000FFFF);
-        draw_line(pixels0, 250, 100, 300, 100, 0x0000FFFF);
+        draw_line(absolute_surface, 300, 100, 300, 400, 0x0000FFFF);
+        draw_line(absolute_surface, 300, 400, 250, 400, 0x0000FFFF);
+        draw_line(absolute_surface, 250, 400, 250, 100, 0x0000FFFF);
+        draw_line(absolute_surface, 250, 100, 300, 100, 0x0000FFFF);
 
-        draw_line(pixels0, 50, 50, 50, 100, 0x0000FFFF);
-        draw_line(pixels0, 50, 100, 100, 100, 0x0000FFFF);
-        draw_line(pixels0, 100, 100, 100, 50, 0x0000FFFF);
-        draw_line(pixels0, 100, 50, 50, 50, 0x0000FFFF);
+        draw_line(absolute_surface, 50, 50, 50, 100, 0x0000FFFF);
+        draw_line(absolute_surface, 50, 100, 100, 100, 0x0000FFFF);
+        draw_line(absolute_surface, 100, 100, 100, 50, 0x0000FFFF);
+        draw_line(absolute_surface, 100, 50, 50, 50, 0x0000FFFF);
 
-        SDL_UpdateTexture(texture, &viewport0, pixels0, VIEWPORT_WIDTH * sizeof(uint32_t));
+        SDL_UpdateTexture(texture, &absolute_viewport, absolute_surface, VIEWPORT_STRIDE);
 
         // Relative view
-        memset(pixels1, 0x22, VIEWPORT_WIDTH * VIEWPORT_HEIGHT * sizeof(uint32_t));
-        draw_relative_player(pixels1, &p);
+        memset(relative_surface, 0x22, VIEWPORT_BYTES);
+        draw_relative_player(relative_surface, &p);
 
-        draw_relative_line(pixels1, &p, 300, 100, 300, 400, 0x0000FFFF);
-        draw_relative_line(pixels1, &p, 300, 400, 250, 400, 0x0000FFFF);
-        draw_relative_line(pixels1, &p, 250, 400, 250, 100, 0x0000FFFF);
-        draw_relative_line(pixels1, &p, 250, 100, 300, 100, 0x0000FFFF);
+        draw_relative_line(relative_surface, &p, 300, 100, 300, 400, 0x0000FFFF);
+        draw_relative_line(relative_surface, &p, 300, 400, 250, 400, 0x0000FFFF);
+        draw_relative_line(relative_surface, &p, 250, 400, 250, 100, 0x0000FFFF);
+        draw_relative_line(relative_surface, &p, 250, 100, 300, 100, 0x0000FFFF);
 
-        draw_relative_line(pixels1, &p, 50, 50, 50, 100, 0x0000FFFF);
-        draw_relative_line(pixels1, &p, 50, 100, 100, 100, 0x0000FFFF);
-        draw_relative_line(pixels1, &p, 100, 100, 100, 50, 0x0000FFFF);
-        draw_relative_line(pixels1, &p, 100, 50, 50, 50, 0x0000FFFF);
+        draw_relative_line(relative_surface, &p, 50, 50, 50, 100, 0x0000FFFF);
+        draw_relative_line(relative_surface, &p, 50, 100, 100, 100, 0x0000FFFF);
+        draw_relative_line(relative_surface, &p, 100, 100, 100, 50, 0x0000FFFF);
+        draw_relative_line(relative_surface, &p, 100, 50, 50, 50, 0x0000FFFF);
 
-        SDL_UpdateTexture(texture, &viewport1, pixels1, VIEWPORT_WIDTH * sizeof(uint32_t));
+        SDL_UpdateTexture(texture, &relative_viewport, relative_surface, VIEWPORT_STRIDE);
 
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, texture, NULL, NULL);
@@ -278,8 +280,8 @@ int main(int argc, char *argv[]) {
         SDL_Delay(10);
     }
 
-    free(pixels1);
-    free(pixels0);
+    free(relative_surface);
+    free(absolute_surface);
     SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
