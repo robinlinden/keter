@@ -242,20 +242,20 @@ int main(int argc, char *argv[]) {
             switch (ev.type) {
             case SDL_KEYDOWN:
             case SDL_KEYUP:
-                switch(ev.key.keysym.sym) {
-                    case SDLK_w:
+                switch(ev.key.keysym.scancode) {
+                    case SDL_SCANCODE_W:
                         wasd[0] = ev.type == SDL_KEYDOWN;
                         break;
-                    case SDLK_a:
+                    case SDL_SCANCODE_A:
                         wasd[1] = ev.type == SDL_KEYDOWN;
                         break;
-                    case SDLK_s:
+                    case SDL_SCANCODE_S:
                         wasd[2] = ev.type == SDL_KEYDOWN;
                         break;
-                    case SDLK_d:
+                    case SDL_SCANCODE_D:
                         wasd[3] = ev.type == SDL_KEYDOWN;
                         break;
-                    case SDLK_ESCAPE:
+                    case SDL_SCANCODE_ESCAPE:
                         running = false;
                         break;
                     default: break;
