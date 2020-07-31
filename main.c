@@ -17,7 +17,6 @@
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
-#define CLAMP(a, min, max) MIN(MAX((a), (min)), (max))
 
 typedef struct Player {
     float x, y;
@@ -25,7 +24,9 @@ typedef struct Player {
 } Player;
 
 static inline void draw_pixel(uint32_t *const surface, int32_t x, int32_t y, uint32_t color) {
-    surface[CLAMP(y, 0, VIEWPORT_HEIGHT - 1) * VIEWPORT_WIDTH + CLAMP(x, 0, VIEWPORT_WIDTH - 1)] = color;
+    if (y < 0 || y > VIEWPORT_HEIGHT - 1) return;
+    if (x < 0 || x > VIEWPORT_WIDTH - 1) return;
+    surface[y * VIEWPORT_WIDTH + x] = color;
 }
 
 static void draw_line(
@@ -33,11 +34,6 @@ static void draw_line(
         int32_t x0, int32_t y0,
         int32_t x1, int32_t y1,
         int32_t color) {
-    x0 = CLAMP(x0, 0, VIEWPORT_WIDTH - 1);
-    x1 = CLAMP(x1, 0, VIEWPORT_WIDTH - 1);
-    y0 = CLAMP(y0, 0, VIEWPORT_HEIGHT - 1);
-    y1 = CLAMP(y1, 0, VIEWPORT_HEIGHT - 1);
-
     float dx = x1 - x0;
     float dy = y1 - y0;
     const float step = MAX(fabs(dx), fabs(dy));
