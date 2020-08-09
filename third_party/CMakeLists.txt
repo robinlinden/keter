@@ -13,8 +13,12 @@ target_include_directories(sdl2
         ${SDL2_SOURCE_DIR}/include
 )
 
+target_compile_definitions(sdl2
+    INTERFACE
+        SDL_MAIN_HANDLED
+)
+
 target_link_libraries(sdl2
     INTERFACE
-        SDL2main
         SDL2-static
 )

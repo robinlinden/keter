@@ -10,8 +10,6 @@ add_executable(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        # SDL does weird things w/ main and it doesn't work well under mingw.
-        $<$<BOOL:${MINGW}>:mingw32>
         sdl2
 )
 
