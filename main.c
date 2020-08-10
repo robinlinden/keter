@@ -6,7 +6,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
@@ -56,7 +59,7 @@ static void draw_line(
         int32_t color) {
     float dx = x1 - x0;
     float dy = y1 - y0;
-    const float step = MAX(fabs(dx), fabs(dy));
+    const float step = MAX(fabsf(dx), fabsf(dy));
     dx /= step;
     dy /= step;
 
@@ -96,9 +99,7 @@ static void draw_relative_line(
             color);
 }
 
-static void draw_relative_player(
-        uint32_t *const surface,
-        const Player *const p) {
+static void draw_relative_player(uint32_t *const surface) {
     for (uint32_t y = VIEWPORT_HEIGHT / 2 - 5; y < VIEWPORT_HEIGHT / 2 + 5; ++y) {
         for (uint32_t x = VIEWPORT_WIDTH / 2 - 5; x < VIEWPORT_WIDTH / 2 + 5; ++x) {
             draw_pixel(surface, x, y, 0x00FF0000);
@@ -211,8 +212,6 @@ static void draw_wall(
 }
 
 int main(int argc, char *argv[]) {
-    srand(time(NULL));
-
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
         fprintf(stderr, "Failed to initialize SDL.\n");
         return 1;
@@ -322,7 +321,7 @@ int main(int argc, char *argv[]) {
 
         // Relative view
         memset(relative_surface, 0x22, VIEWPORT_BYTES);
-        draw_relative_player(relative_surface, &p);
+        draw_relative_player(relative_surface);
 
         draw_relative_line(relative_surface, &p, 300, 100, 300, 400, 0x0000FFFF);
         draw_relative_line(relative_surface, &p, 300, 400, 250, 400, 0x0000FFFF);
@@ -382,8 +381,8 @@ int main(int argc, char *argv[]) {
         p.x -= wasd[2] ? cosf(p.heading) : 0;
         p.y -= wasd[2] ? sinf(p.heading) : 0;
 
-        p.heading -= wasd[1] ? 0.1 : 0;
-        p.heading += wasd[3] ? 0.1 : 0;
+        p.heading -= wasd[1] ? 0.1f : 0;
+        p.heading += wasd[3] ? 0.1f : 0;
         if (p.heading > M_PI * 2) {
             p.heading -= M_PI * 2;
         } else if (p.heading < 0) {
