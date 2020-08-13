@@ -66,14 +66,9 @@ static void draw_line(
     float x = x0;
     float y = y0;
 
-    // Fill.
     for (uint32_t i = 0; i < step; ++i, x += dx, y += dy) {
         draw_pixel(surface, x, y, color);
     }
-
-    // Border.
-    draw_pixel(surface, x0, y0, 0);
-    draw_pixel(surface, x1, y1, 0);
 }
 
 static inline void make_relative(const Player *const p, float *const x, float *const y) {
@@ -116,14 +111,9 @@ static void draw_vertical_line(
         uint32_t x,
         uint32_t y1, uint32_t y2,
         uint32_t color) {
-    // Border.
-    draw_pixel(surface, x, y1, 0);
-    draw_pixel(surface, x, y2, 0);
-
-    // Fill.
     const uint32_t y_min = MIN(y1, y2);
     const uint32_t y_max = MAX(y1, y2);
-    for (uint32_t y = y_min + 1; y < y_max; ++y) {
+    for (uint32_t y = y_min; y < y_max; ++y) {
         draw_pixel(surface, x, y, color);
     }
 }
