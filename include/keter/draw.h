@@ -75,14 +75,14 @@ static void draw_vertical_line(
 static void draw_player(
         uint32_t *const surface,
         const Player *const p) {
-    for (uint32_t y = p->y - 5; y < p->y + 5; ++y) {
-        for (uint32_t x = p->x - 5; x < p->x + 5; ++x) {
+    for (uint32_t y = p->pos.y - 5; y < p->pos.y + 5; ++y) {
+        for (uint32_t x = p->pos.x - 5; x < p->pos.x + 5; ++x) {
             draw_pixel(surface, x, y, 0x00FF0000);
         }
     }
 
-    const uint32_t heading_y = p->y + sinf(p->heading) * 15;
-    const uint32_t heading_x = p->x + cosf(p->heading) * 15;
+    const uint32_t heading_y = p->pos.y + sinf(p->heading) * 15;
+    const uint32_t heading_x = p->pos.x + cosf(p->heading) * 15;
     draw_pixel(surface, heading_x, heading_y, 0x00FF00FF);
 }
 

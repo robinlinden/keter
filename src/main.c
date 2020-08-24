@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
     };
 
     bool wasd[4] = {0}; // Held keys.
-    Player p = { .x = 100, .y = 100 };
+    Player p = {{.x = 100, .y = 100}};
 
     bool running = true;
     while (running) {
@@ -179,10 +179,20 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        p.x += wasd[0] ? cosf(p.heading) : 0;
-        p.y += wasd[0] ? sinf(p.heading) : 0;
-        p.x -= wasd[2] ? cosf(p.heading) : 0;
-        p.y -= wasd[2] ? sinf(p.heading) : 0;
+        const bool forward = wasd[0];
+        const bool backward = wasd[2];
+        const bool key_held = forward || backward;
+        Vector2 move_vec = {0};
+        move_vec.x += forward ? cosf(p.heading) : 0;
+        move_vec.y += forward ? sinf(p.heading) : 0;
+        move_vec.x -= backward ? cosf(p.heading) : 0;
+        move_vec.y -= backward ? sinf(p.heading) : 0;
+
+        const float acceleration = key_held ? 0.4f : 0.2f;
+        p.vel.x = p.vel.x * (1 - acceleration) + move_vec.x * acceleration;
+        p.vel.y = p.vel.y * (1 - acceleration) + move_vec.y * acceleration;
+        p.pos.x += p.vel.x;
+        p.pos.y += p.vel.y;
 
         p.heading -= wasd[1] ? 0.1f : 0;
         p.heading += wasd[3] ? 0.1f : 0;
