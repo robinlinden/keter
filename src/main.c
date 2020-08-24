@@ -143,7 +143,9 @@ int main(int argc, char *argv[]) {
         // First-person view
         memset(first_person_surface, 0x44, VIEWPORT_BYTES);
 
-        draw_wall(first_person_surface, &p, 250, 400, 250, 100, 0x0000FFFF);
+        for (size_t i = 0; i < sizeof(walls) / sizeof(walls[0]); i += 4) {
+            draw_wall(first_person_surface, &p, walls[i], walls[i+1], walls[i+2], walls[i+3], 0x0000FFFF);
+        }
 
         SDL_UpdateTexture(texture, &first_person_viewport, first_person_surface, VIEWPORT_STRIDE);
 
