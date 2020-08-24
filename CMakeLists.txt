@@ -5,7 +5,12 @@ project(project_keter LANGUAGES C)
 add_subdirectory(third_party)
 
 add_executable(${PROJECT_NAME}
-    main.c
+    src/main.c
+)
+
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+        include
 )
 
 target_link_libraries(${PROJECT_NAME}
