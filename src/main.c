@@ -31,6 +31,8 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    SDL_SetRelativeMouseMode(SDL_ENABLE);
+
     SDL_Renderer *const renderer = SDL_CreateRenderer(window, -1, 0);
     if (renderer == NULL) {
         fprintf(stderr, "Failed to create SDL renderer.\n");
@@ -178,6 +180,10 @@ int main(int argc, char *argv[]) {
                 break;
             }
         }
+
+        int mouse_x, mouse_y;
+        SDL_GetRelativeMouseState(&mouse_x, &mouse_y);
+        p.heading += (float)mouse_x * 0.02f;
 
         const bool forward = wasd[0];
         const bool backward = wasd[2];
