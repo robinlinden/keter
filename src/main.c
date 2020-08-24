@@ -186,13 +186,19 @@ int main(int argc, char *argv[]) {
         p.heading += (float)mouse_x * 0.02f;
 
         const bool forward = wasd[0];
+        const bool left = wasd[1];
         const bool backward = wasd[2];
-        const bool key_held = forward || backward;
+        const bool right = wasd[3];
+        const bool key_held = forward || left || backward || right;
         Vector2 move_vec = {0};
         move_vec.x += forward ? cosf(p.heading) : 0;
         move_vec.y += forward ? sinf(p.heading) : 0;
         move_vec.x -= backward ? cosf(p.heading) : 0;
         move_vec.y -= backward ? sinf(p.heading) : 0;
+        move_vec.x += left ? sinf(p.heading) : 0;
+        move_vec.y -= left ? cosf(p.heading) : 0;
+        move_vec.x -= right ? sinf(p.heading) : 0;
+        move_vec.y += right ? cosf(p.heading) : 0;
 
         const float acceleration = key_held ? 0.4f : 0.2f;
         p.vel.x = p.vel.x * (1 - acceleration) + move_vec.x * acceleration;
@@ -200,8 +206,6 @@ int main(int argc, char *argv[]) {
         p.pos.x += p.vel.x;
         p.pos.y += p.vel.y;
 
-        p.heading -= wasd[1] ? 0.1f : 0;
-        p.heading += wasd[3] ? 0.1f : 0;
         if (p.heading > M_PI * 2) {
             p.heading -= M_PI * 2;
         } else if (p.heading < 0) {
