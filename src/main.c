@@ -106,21 +106,27 @@ int main(int argc, char *argv[]) {
     bool wasd[4] = {0}; // Held keys.
     Player p = {{.x = 100, .y = 100}};
 
+    const int32_t walls[] = {
+            300, 100, 300, 400,
+            300, 400, 250, 400,
+            250, 400, 250, 100,
+            250, 100, 300, 100,
+
+            50, 50, 50, 100,
+            50, 100, 100, 100,
+            100, 100, 100, 50,
+            100, 50, 50, 50
+    };
+
     bool running = true;
     while (running) {
         // Absolute view
         memset(absolute_surface, 0, VIEWPORT_BYTES);
         draw_player(absolute_surface, &p);
 
-        draw_line(absolute_surface, 300, 100, 300, 400, 0x0000FFFF);
-        draw_line(absolute_surface, 300, 400, 250, 400, 0x0000FFFF);
-        draw_line(absolute_surface, 250, 400, 250, 100, 0x0000FFFF);
-        draw_line(absolute_surface, 250, 100, 300, 100, 0x0000FFFF);
-
-        draw_line(absolute_surface, 50, 50, 50, 100, 0x0000FFFF);
-        draw_line(absolute_surface, 50, 100, 100, 100, 0x0000FFFF);
-        draw_line(absolute_surface, 100, 100, 100, 50, 0x0000FFFF);
-        draw_line(absolute_surface, 100, 50, 50, 50, 0x0000FFFF);
+        for (size_t i = 0; i < sizeof(walls) / sizeof(walls[0]); i += 4) {
+            draw_line(absolute_surface, walls[i], walls[i+1], walls[i+2], walls[i+3], 0x0000FFFF);
+        }
 
         SDL_UpdateTexture(texture, &absolute_viewport, absolute_surface, VIEWPORT_STRIDE);
 
@@ -128,15 +134,9 @@ int main(int argc, char *argv[]) {
         memset(relative_surface, 0x22, VIEWPORT_BYTES);
         draw_relative_player(relative_surface);
 
-        draw_relative_line(relative_surface, &p, 300, 100, 300, 400, 0x0000FFFF);
-        draw_relative_line(relative_surface, &p, 300, 400, 250, 400, 0x0000FFFF);
-        draw_relative_line(relative_surface, &p, 250, 400, 250, 100, 0x0000FFFF);
-        draw_relative_line(relative_surface, &p, 250, 100, 300, 100, 0x0000FFFF);
-
-        draw_relative_line(relative_surface, &p, 50, 50, 50, 100, 0x0000FFFF);
-        draw_relative_line(relative_surface, &p, 50, 100, 100, 100, 0x0000FFFF);
-        draw_relative_line(relative_surface, &p, 100, 100, 100, 50, 0x0000FFFF);
-        draw_relative_line(relative_surface, &p, 100, 50, 50, 50, 0x0000FFFF);
+        for (size_t i = 0; i < sizeof(walls) / sizeof(walls[0]); i += 4) {
+            draw_relative_line(relative_surface, &p, walls[i], walls[i+1], walls[i+2], walls[i+3], 0x0000FFFF);
+        }
 
         SDL_UpdateTexture(texture, &relative_viewport, relative_surface, VIEWPORT_STRIDE);
 
