@@ -31,3 +31,15 @@ target_compile_options(${PROJECT_NAME} INTERFACE
         /WX;
     >
 )
+
+target_compile_features(${PROJECT_NAME}
+    PRIVATE
+        c_std_11
+)
+
+set_target_properties(${PROJECT_NAME}
+    PROPERTIES
+        C_STANDARD 11
+        C_STANDARD_REQUIRED YES
+        C_EXTENSIONS NO
+)
